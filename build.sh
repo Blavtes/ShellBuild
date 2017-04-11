@@ -9,18 +9,6 @@ BRANCHNAME=develop
 # 如：sh build.sh Debug
 
 MODE=$1
-# echo "请输入传入Debug或者Release："
-# read -p "请输入传入Debug或者Release：" input
-# if [ $? -ne 0 ]; then
-# 	MODE = $1
-# 	echo $MODE + $input
-# else 
-# 	echo  $input
-# 	MODE = $input
-# 	echo  $input + $MODE
-# fi
-# echo $MODE
-# exit
 
 # svn 更新
 svn update
@@ -104,9 +92,9 @@ fi
 
 
 
-echo "\n\n\n====================================\n\n\n"
+echo "\n\n\n====================================\n"
 echo "===== xcrun begin ====="
-echo "\n\n\n====================================\n\n\n"
+echo "\n====================================\n\n\n"
 
 xcrun -sdk iphoneos PackageApplication \
 -v $IPAPATH/Build/Products/$MODE-iphoneos/$SCHEMENAME.app \
@@ -114,18 +102,40 @@ xcrun -sdk iphoneos PackageApplication \
 
 if [ -e $IPAPATH/$IPANAME ]; then
 #statements
-	echo "\n\n\n====================================\n\n\n"
+	echo "\n\n\n====================================\n"
 	echo "configuration! build Successful!"
-	echo "\n\n\n====================================\n\n\n"
+	echo "\n====================================\n\n\n"
 	open $IPAPATH
 else
-	echo "\n\n\n====================================\n\n\n"
+	echo "\n\n\n====================================\n"
 	echo "error:create IPA faild!!"
-	echo "\n\n\n====================================\n\n\n"
+	echo "\n====================================\n\n\n"
 fi
 
-xcrun instruments -w 'iPhone 6s'
+ 
+# 启动模拟器
+# xcrun instruments -w 'iPhone 6s'
 
-xcrun simctl uninstall booted com.gjfax.faxApp
+# 卸载应用
+# xcrun simctl uninstall booted com.gjfax.faxApp
 
-xcrun simctl install booted $IPAPATH/Build/Products/$MODE-iphoneos/$SCHEMENAME.app
+# 安装应用
+# xcrun simctl install booted $IPAPATH/Build/Products/$MODE-iphoneos/$SCHEMENAME.app
+
+# 上传应用 应用管理API 查看uKey api_key
+echo "upload path: " +$IPAPATH/$DATE.ipa
+
+curl -F "file=@$IPAPATH/$DATE.ipa" \
+-F "uKey=d9572ef3a33118ee88eec9e8dc4e1c80" \
+-F "_api_key=9c0328eb31c5b8597fe721e6d4e28a3a" \
+https://qiniu-storage.pgyer.com/apiv1/app/upload
+if [ $? -ne 0 ]; then
+	echo "\n\n====================================\n"
+	echo "upload ipa faild!!"
+	echo "\n====================================\n\n\n"
+else
+	echo "\n\n====================================\n"
+	echo "upload ipa Successful!!"
+	echo "\n====================================\n\n\n"
+fi
+
