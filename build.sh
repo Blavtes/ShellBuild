@@ -123,3 +123,9 @@ else
 	echo "error:create IPA faild!!"
 	echo "\n\n\n====================================\n\n\n"
 fi
+
+xcrun instruments -w 'iPhone 6s'
+
+xcrun simctl uninstall booted com.gjfax.faxApp
+
+xcrun simctl install booted $IPAPATH/Build/Products/$MODE-iphoneos/$SCHEMENAME.app
