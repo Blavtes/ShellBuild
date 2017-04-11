@@ -9,7 +9,7 @@ BRANCHNAME=develop
 # 如：sh build.sh Debug
 
 MODE=$1
-
+serverType=$2
 # svn 更新
 svn update
 if [ $? -ne 0 ]; then
@@ -42,10 +42,15 @@ if [ $MODE = "Release" ]; then
 	fi
 fi
 
-
-
 echo "code update Successful"
 echo "\n\n\nbegin build it.......\n\n"
+
+# $serverType是启动脚本传入的参数值  TestDebug 为新增加的model
+if [ $MODE = "TestDebug" ]; then    
+	PREPROCESSOR_DEFINITIONS="COCOAPODS=1 TestDebug=$serverType DEBUG=1" 
+	echo "config " + $PREPROCESSOR_DEFINITIONS
+fi
+
 
 DATE=`date +%Y%m%d_%H%M`
 SOURCEPATH=$( cd "$( dirname $0 )" && pwd)
@@ -72,6 +77,22 @@ if [ $MODE = "Release" ]; then
 		echo "error:Build faild!!"
 		exit 1
 	fi
+elif [ $MODE = "Debug" ]; then
+		xcodebuild \
+	-workspace $SOURCEPATH/$SCHEMENAME.xcworkspace \
+	-scheme $SCHEMENAME \
+	-configuration $MODE \
+	CODE_SIGN_IDENTITY="iPhone Developer: rui zhang (HK36TJZ8XU)" \
+	PROVISIONING_PROFILE="cd4f0784-efcc-4a4e-b9f8-3400eef49b99" \
+	build \
+	-derivedDataPath $IPAPATH
+
+	if	[ -e $IPAPATH ]; then
+		echo "xcodebuild Successful"
+	else
+		echo "error:Build faild!!"
+		exit 1
+	fi
 else 
 	xcodebuild \
 	-workspace $SOURCEPATH/$SCHEMENAME.xcworkspace \
@@ -89,8 +110,6 @@ else
 		exit 1
 	fi
 fi
-
-
 
 echo "\n\n\n====================================\n"
 echo "===== xcrun begin ====="
@@ -129,6 +148,7 @@ curl -F "file=@$IPAPATH/$DATE.ipa" \
 -F "uKey=d9572ef3a33118ee88eec9e8dc4e1c80" \
 -F "_api_key=9c0328eb31c5b8597fe721e6d4e28a3a" \
 https://qiniu-storage.pgyer.com/apiv1/app/upload
+
 if [ $? -ne 0 ]; then
 	echo "\n\n====================================\n"
 	echo "upload ipa faild!!"
