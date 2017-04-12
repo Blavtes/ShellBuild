@@ -4,7 +4,7 @@ ShellBuild
 ### 脚本自动打包多环境配置
 
 Xcode 设置：
---------
+
 ###step1
     * <img src=https://github.com/Blavtes/ShellBuild/blob/master/step1.png >
 
@@ -19,4 +19,3 @@ Xcode 设置：
 
 ###step5
     * <img src=https://github.com/Blavtes/ShellBuild/blob/master/step5.png >
-_______
