@@ -9,8 +9,10 @@ BRANCHNAME=develop
 # 如：sh build.sh Debug
 
 MODE=$1
-serverType=$2
-# svn 更新
+serverType=1
+
+#svn 更新
+
 svn update
 if [ $? -ne 0 ]; then
 	echo "svn up faild!!!"
@@ -43,6 +45,7 @@ if [ $MODE = "Release" ]; then
 fi
 
 echo "code update Successful"
+
 echo "\n\n\nbegin build it.......\n\n"
 
 # $serverType是启动脚本传入的参数值  TestDebug 为新增加的model
@@ -56,6 +59,34 @@ DATE=`date +%Y%m%d_%H%M`
 SOURCEPATH=$( cd "$( dirname $0 )" && pwd)
 IPAPATH=/Users/`whoami`/Documents/AutoBuildIPA/$BRANCHNAME/$MODE/$DATE
 IPANAME=$SCHEMENAME_$DATE.ipa
+
+echo "cp hostSetting file...."
+
+HostFile=/Users/`whoami`/Documents/AutoBuildIPA/HostSetting.h
+echo "host " + $HostFile
+if [ -f $HostFile ]; then 
+	 
+ 	echo "have Host File to Build mk...."
+else
+	cp -r /$SOURCEPATH/HX_GJS/Classes/BaseFrame/Networking/HostSetting.txt $HostFile
+	if [ $? -ne 0 ]; then
+		echo "cp back-up  txt->HostSetting.h faild!!!"
+		exit 1
+	fi
+	cp -r /$SOURCEPATH/HX_GJS/Classes/BaseFrame/Networking/HostSetting.h /Users/`whoami`/Documents/AutoBuildIPA/HostSetting.txt
+	if [ $? -ne 0 ]; then
+		echo "cp back-up  HostSetting.h->txt faild!!!"
+		exit 1
+	fi
+	echo "copy Host File to Build mk...."
+fi
+
+cp -r $HostFile /$SOURCEPATH/HX_GJS/Classes/BaseFrame/Networking/HostSetting.h
+
+if [ $? -ne 0 ]; then
+		echo "cp  HostSetting.h faild!!!"
+		exit 1
+fi
 
 echo "path : " + $IPAPATH
 
@@ -84,6 +115,7 @@ elif [ $MODE = "Debug" ]; then
 	-configuration $MODE \
 	CODE_SIGN_IDENTITY="iPhone Developer: rui zhang (HK36TJZ8XU)" \
 	PROVISIONING_PROFILE="cd4f0784-efcc-4a4e-b9f8-3400eef49b99" \
+	clean \
 	build \
 	-derivedDataPath $IPAPATH
 
@@ -100,6 +132,7 @@ else
 	-configuration $MODE \
 	CODE_SIGN_IDENTITY="iPhone Developer: rui zhang (HK36TJZ8XU)" \
 	PROVISIONING_PROFILE="cd4f0784-efcc-4a4e-b9f8-3400eef49b99" \
+	clean \
 	build \
 	-derivedDataPath $IPAPATH
 
@@ -131,7 +164,11 @@ else
 	echo "\n====================================\n\n\n"
 fi
 
- 
+cp -r /Users/`whoami`/Documents/AutoBuildIPA/HostSetting.txt /$SOURCEPATH/HX_GJS/Classes/BaseFrame/Networking/HostSetting.h 
+if [ $? -ne 0 ]; then
+	echo "cp recover  txt-> HostSetting.h faild!!!"
+	exit 1
+fi
 # 启动模拟器
 # xcrun instruments -w 'iPhone 6s'
 
@@ -142,11 +179,23 @@ fi
 # xcrun simctl install booted $IPAPATH/Build/Products/$MODE-iphoneos/$SCHEMENAME.app
 
 # 上传应用 应用管理API 查看uKey api_key
+
 echo "upload path: " +$IPAPATH/$DATE.ipa
+
+updateDescription=(集成)
+if [ $MODE = "Debug" ]; then
+	updateDescription=(用户)
+fi
+
+if [ $MODE = "Release" ]; then
+	updateDescription=(生产)
+fi
+echo "updateDescription " +$updateDescription
 
 curl -F "file=@$IPAPATH/$DATE.ipa" \
 -F "uKey=d9572ef3a33118ee88eec9e8dc4e1c80" \
 -F "_api_key=9c0328eb31c5b8597fe721e6d4e28a3a" \
+-F "updateDescription=$updateDescription" \
 https://qiniu-storage.pgyer.com/apiv1/app/upload
 
 if [ $? -ne 0 ]; then
